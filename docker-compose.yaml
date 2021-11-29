@@ -1,0 +1,79 @@
+version: "2.4"
+services:
+  db:
+    image: mariadb:latest
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "--silent"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+    env_file:
+      - config/mysql.env
+      - config/mysql_root.env
+    expose:
+      - "3306"
+    volumes:
+      - db-data:/var/lib/mysql # To override random volume name
+    networks:
+      - backend
+    restart: on-failure
+
+  graphql:
+    image: node:latest
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://graphql:5000"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+    restart: on-failure
+    user: node
+    working_dir: /home/node/app
+    env_file:
+      - config/graphql.env
+    links:
+      - db
+    volumes:
+      - ./graphql:/home/node/app
+      - user-pictures:/data # To store users pictures in persistent storage
+    networks:
+      - backend
+      - frontend
+    expose:
+      - "5000"
+    ports:
+      - "5000:5000"
+    command: "npm start"
+
+  # flutter:
+  #   build: ./flutter
+  #   env_file: config/flutter.env
+  #   expose:
+  #     - "3000"
+  #   working_dir: /myapp
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - ./flutter/myapp:/myapp
+  #   # links:
+  #   #   - app
+  #   command: "flutter run"
+  #   networks:
+  #     - frontend
+  #   restart: on-failure
+  #   # healthcheck:
+  #   #   test: ["CMD", "curl", "-f", "http://front:3000"]
+  #   #   interval: 10s
+  #   #   timeout: 3s
+  #   #   retries: 10
+  #   #   start_period: 20s
+
+networks:
+  backend:
+  frontend:
+
+volumes:
+  user-pictures:
+  db-data:
+  

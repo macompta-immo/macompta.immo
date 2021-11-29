@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: "portainer-webui-ingress-service"
+  namespace: portainer
+  annotations:
+    ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: portainer.macompta.immo # CHANGE ME!
+    http:
+      paths:
+      # The * is needed so that all traffic gets redirected to nginx
+      - path: /*
+        pathType: Prefix
+        backend:
+          service:
+            name: portainer
+            port:
+              number: 9000
